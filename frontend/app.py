@@ -1,6 +1,9 @@
 import streamlit as st
 import requests
 
+# Set page title and layout
+st.set_page_config(page_title="Advanced RAG Bot", layout="wide")
+
 # Ensure core message history state exists
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -20,7 +23,7 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("📂 Ingest Knowledge Base")
     
-    # Updated to support PDFs and DocX files natively
+    # Supported files list
     uploaded_file = st.file_uploader(
         "Upload a document (.txt, .md, .pdf, .docx)", 
         type=["txt", "md", "pdf", "docx"], 
@@ -28,10 +31,11 @@ with st.sidebar:
     )
     
     if uploaded_file is not None:
-        if f"uploaded_{uploaded_file.name}" not in st.session_state:
+        # Explicit processing action button to prevent automatic request looping on page re-runs
+        if st.button("🚀 Process & Ingest Document", use_container_width=True):
             with st.spinner(f"Vectorizing & indexing {uploaded_file.name}..."):
                 try:
-                    # Map content types to make parsing smooth for FastAPI
+                    # Dynamically adjust content types for the multipart/form-data parser
                     content_type = "text/plain"
                     if uploaded_file.name.endswith(".pdf"):
                         content_type = "application/pdf"
@@ -40,11 +44,11 @@ with st.sidebar:
                         
                     files = {"file": (uploaded_file.name, uploaded_file.getvalue(), content_type)}
                     
+                    # Inter-container network request targeting your FastAPI pipeline
                     response = requests.post("http://127.0.0.1:8000/api/files/upload", files=files)
                     
                     if response.status_code == 200:
                         st.success(f"Successfully loaded {uploaded_file.name} into ChromaDB!")
-                        st.session_state[f"uploaded_{uploaded_file.name}"] = True
                     else:
                         st.error(f"Failed to upload: {response.json().get('detail', 'Unknown error')}")
                 except Exception as e:
@@ -64,6 +68,7 @@ for message in st.session_state.messages:
 # User Chat Input Box
 if prompt := st.chat_input("Ask a question about your uploaded materials..."):
     
+    # Print user message instantly
     with st.chat_message("user"):
         st.write(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -79,9 +84,11 @@ if prompt := st.chat_input("Ask a question about your uploaded materials..."):
                 
                 with st.chat_message("assistant"):
                     st.write(answer)
+                    
+                    # Collapsible diagnostic trace segment 
                     with st.expander("🔍 See RAG pipeline trace metadata"):
                         st.write(f"**Query Rewriter output:** {data.get('rewritten_query')}")
-                        st.write("**Sources used:**")
+                        st.write("**Sources used (Hybrid BM25 Ranked):**")
                         st.json(data.get("sources_used"))
                         
                 st.session_state.messages.append({"role": "assistant", "content": answer})
