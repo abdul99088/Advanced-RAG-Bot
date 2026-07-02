@@ -13,3 +13,29 @@ This repository implements a **Full-Stack Hybrid RAG (Retrieval-Augmented Genera
 ## 🏗️ System Architecture & Core Engineering
 
 The platform is engineered using a decoupled client-server architecture:
+### 🔍 Key Features
+
+* **Intelligent File Parsing:** Intercepts incoming binary streams (`.pdf`, `.md`, `.txt`) and dynamically routes processing logic. Leverages `pypdf` to programmatically crawl page geometries and extract clean plain text streams.
+* **Hybrid Retrieval Strategy (Dense + Sparse):** Evaluates user queries through a multi-layered verification system. It queries a **ChromaDB Vector Store** to assemble semantic candidates, then feeds those tokens into a **BM25Okapi Reranking Algorithm** to isolate exact keyword intersections.
+* **Blazing-Fast Inference Pipeline:** Packages the synthesized context blocks cleanly into optimized prompt boundaries and forwards them to the `llama-3.1-8b-instant` model hosted on **Groq**, delivering low-latency responses.
+* **Resilient Caching Layer:** Incorporates a local file-system caching strategy (`/tmp/rag_fallback_cache.txt`) ensuring complete system persistence and high reliability under multi-tenant cross-port container requests.
+
+---
+
+## 🛠️ Tech Stack & Dependencies
+
+* **Frontend Dashboard:** Streamlit
+* **Backend API Engine:** FastAPI / Uvicorn Server
+* **Vector Store & Indexing:** ChromaDB (`all-MiniLM-L6-v2`)
+* **Lexical Ranking:** Rank-BM25
+* **LLM Engine:** Groq API SDK (`Llama-3.1-8b-instant`)
+* **File Utilities:** PyPDF, IO Streams
+
+---
+
+## 🚀 Quickstart & Installation
+
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/abdul99088/Advanced-RAG-Bot.git](https://github.com/abdul99088/Advanced-RAG-Bot.git)
+cd Advanced-RAG-Bot
